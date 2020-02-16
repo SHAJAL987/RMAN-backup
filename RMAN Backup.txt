@@ -1,0 +1,145 @@
+		H O W   T O   T A K E   B A C K U P   U S I N G   R M A N 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+		STEP-1: Check status of instance and log_mode
+		-------
+			SQL> SELECT STATUS
+			     FROM   V$INSTANCE;
+
+			STATUS
+			------------
+			OPEN
+
+			SQL> SELECT LOG_MODE
+			     FROM   V$DATABASE;
+
+			LOG_MODE                                                                        
+			------------                                                                    
+			ARCHIVELOG   
+
+		STEP-2: Check datafile locations and table spaces.
+		-------
+			SQL> SELECT  NAME  
+			     FROM    V$DATAFILE;
+
+		NAME
+		-------------------------------------------------------
+		G:\DATABASEADMIN\ORADATA\ORCL\SYSTEM01.DBF
+		G:\DATABASEADMIN\ORADATA\ORCL\SYSAUX01.DBF
+		G:\DATABASEADMIN\ORADATA\ORCL\UNDOTBS01.DBF
+		G:\DATABASEADMIN\ORADATA\ORCL\USERS01.DBF
+
+			SQL> SELECT   NAME
+			     FROM     V$TABLESPACE;
+
+		
+		NAME                                                                            
+		------------------------------                                                  
+		SYSAUX                                                                          
+		SYSTEM                                                                          
+		UNDOTBS1                                                                        
+		USERS                                                                           
+		TEMP 
+
+		STEP-3: Now check is any Free space in FRA?
+		-------
+			SQL> SHOW PARAMETER RECO;
+
+		STEP-4: See RMAN configuration.
+		-------
+			SQL> DESC V$RMAN_CONFIGURATION;
+
+		STEP-5: Enter into RMAN
+		-------
+
+			There are basic 3 types of Connection to RMAN:
+			----------------------------------------------
+			First of all go to CMD and Type-
+			---------------------------------
+			type-1: rman target /
+			type-2: rman
+                                  -- then type
+			        connect target
+			type-3: rman target sys/sys123@orcl;
+
+		STEP-6: Check All parameter status of RMAN
+		-------
+			RMAN> show all;
+
+ 
+		STEP-7: Check need backup
+		-------
+			RMAN> report need backup;
+
+			RMAN retention policy will be applied to the command
+			RMAN retention policy is set to redundancy 1
+			Report of files with less than 1 redundant backups
+			File #bkps Name
+			---- ----- -----------------------------------------------------
+			1    0     /u01/app/oracle/oradata/ORCL/datafile/o1_mf_system_h3v8h0nh_.dbf
+			3    0     /u01/app/oracle/oradata/ORCL/datafile/o1_mf_sysaux_h3v8jfx0_.dbf
+			4    0     /u01/app/oracle/oradata/ORCL/datafile/o1_mf_undotbs1_h3v8k7b2_.dbf
+			7    0     /u01/app/oracle/oradata/ORCL/datafile/o1_mf_users_h3v8k8l0_.dbf
+
+
+		STEP-8: Now take backup
+		------
+			RMAN> BACKUP DATABASE;
+			or,
+			run
+			{
+			   backup database;
+			}
+
+		---------------------------------- DONE ------------------------
+		EXTRA:
+		------
+			# DELETE: BACKUP
+			---------------
+			RMAN> DELETE BACKUP;
+
+			# SINGLE FILE BACKUP
+			------------------
+			RMAN> BACKUP DATAFILE '/u01/app/oracle/oradata/ORCL/datafile/o1_mf_system_h3v8h0nh_.dbf';
+
+			# BOTH ARCHIVE + DATABASE BACKUP
+			---------------------------------
+			RMAN> backup database plus archivelog; 
+
+			# CHANGE RANM FILE CONFIGURATION
+			--------------------------------
+			RMAN> SHOW ALL;
+			
+			RMAN configuration parameters for database with db_unique_name ORCL are:
+			CONFIGURE RETENTION POLICY TO REDUNDANCY 1; # default
+			CONFIGURE BACKUP OPTIMIZATION OFF; # default
+			CONFIGURE DEFAULT DEVICE TYPE TO DISK; # default
+			CONFIGURE CONTROLFILE AUTOBACKUP ON; # default
+			CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '%F'; # default
+			CONFIGURE DEVICE TYPE DISK PARALLELISM 1 BACKUP TYPE TO BACKUPSET; # default
+			CONFIGURE DATAFILE BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+			CONFIGURE ARCHIVELOG BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+			CONFIGURE MAXSETSIZE TO UNLIMITED; # default
+			CONFIGURE ENCRYPTION FOR DATABASE OFF; # default
+			CONFIGURE ENCRYPTION ALGORITHM 'AES128'; # default
+			CONFIGURE COMPRESSION ALGORITHM 'BASIC' AS OF RELEASE 'DEFAULT' OPTIMIZE FOR LOAD TRUE ; # default
+			CONFIGURE RMAN OUTPUT TO KEEP FOR 7 DAYS; # default
+			CONFIGURE ARCHIVELOG DELETION POLICY TO NONE; # default
+			CONFIGURE SNAPSHOT CONTROLFILE NAME TO '/u01/app/oracle/product/12.2.0.1/db_1/dbs/snapcf_orcl.f'; # default
+			
+			RMAN> CONFIGURE CONTROLFILE AUTOBACKUP OFF;
+
+			# SET BY DEFAULT VALUE
+			----------------------
+			RMAN> CONFIGURE CONTROLFILE AUTOBACKUP CLEAR;
+
+
+
+
+
+
+
+
+
+
+	
